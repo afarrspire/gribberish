@@ -829,6 +829,10 @@ pub enum ForecastRadarImagery {
     #[abbrev = "REFC"]
     #[unit = "dB"]
     CompositeReflectivity = 196,
+    #[description = "echo top"]
+    #[abbrev = "RETOP"]
+    #[unit = "m"]
+    EchoTopNcep = 197,
     #[description = "hourly maximum of simulated reflectivity"]
     #[abbrev = "MAXREF"]
     #[unit = "dB"]
@@ -985,10 +989,22 @@ pub enum PhysicalAtmosphericProperties {
     #[abbrev = "CAT"]
     #[unit = "%"]
     ClearAirTurbulence = 22,
+    #[description = "mountain wave turbulence (eddy dissipation rate)"]
+    #[abbrev = "MWTURB"]
+    #[unit = "m2/3s-1"]
+    MountainWaveTurbulence = 28,
     #[description = "clear air turbulence (eddy dissipation rate)"]
     #[abbrev = "CAT"]
     #[unit = "m2/3s-1"]
     ClearAirTurbulenceEddyDissipationRate = 29,
+    #[description = "eddy dissipation parameter"]
+    #[abbrev = "EDPARM"]
+    #[unit = "m2/3s-1"]
+    EddyDissipationParameter = 30,
+    #[description = "maximum of eddy dissipation parameter in layer"]
+    #[abbrev = "MXEDPRM"]
+    #[unit = "m2/3s-1"]
+    MaxEddyDissipationParameterInLayer = 31,
     #[description = "snow albedo"]
     #[abbrev = "ASN"]
     #[unit = "proportion"]
@@ -1282,5 +1298,42 @@ mod tests {
 
         // Already supported entries must keep working
         assert_eq!(parameter(0, 14, 193).unwrap().abbrev, "OZCON");
+    }
+
+    #[test]
+    fn eddy_dissipation_rate_parameters() {
+        // GRIB2 table 4.2-0-19 (physical atmospheric properties) numbers 28, 30, 31.
+        // Reference: https://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_doc/grib2_table4-2-0-19.shtml
+        let cases = [
+            (28u8, "MWTURB", "mountainwaveturbulence"),
+            (30, "EDPARM", "eddydissipationparameter"),
+            (31, "MXEDPRM", "maxeddydissipationparameterinlayer"),
+        ];
+        for (number, abbrev, name) in cases {
+            let param = parameter(0, 19, number).unwrap();
+            assert_eq!(param.abbrev, abbrev, "parameter number {number}");
+            assert_eq!(param.name, name, "parameter number {number}");
+            assert_eq!(param.unit, "m2/3s-1", "parameter number {number}");
+        }
+
+        // Neighbouring entries must keep working
+        assert_eq!(parameter(0, 19, 22).unwrap().abbrev, "CAT");
+        assert_eq!(parameter(0, 19, 22).unwrap().unit, "%");
+        assert_eq!(parameter(0, 19, 192).unwrap().abbrev, "ASN");
+    }
+
+    #[test]
+    fn ncep_local_echo_top() {
+        // GRIB2 table 4.2-0-16 (forecast radar imagery). 197 is NCEP's local-use entry for
+        // echo top, the same quantity as WMO number 3.
+        // Reference: https://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_doc/grib2_table4-2-0-16.shtml
+        for (number, name) in [(3u8, "echotop"), (197, "echotopncep")] {
+            let retop = parameter(0, 16, number).unwrap();
+            assert_eq!(retop.abbrev, "RETOP", "parameter number {number}");
+            assert_eq!(retop.name, name, "parameter number {number}");
+            assert_eq!(retop.unit, "m", "parameter number {number}");
+        }
+        assert_eq!(parameter(0, 16, 196).unwrap().abbrev, "REFC");
+        assert_eq!(parameter(0, 16, 198).unwrap().abbrev, "MAXREF");
     }
 }

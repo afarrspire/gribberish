@@ -188,7 +188,7 @@ jobs:
         run: python -W error -c "import sys, gribberish; assert not sys._is_gil_enabled()"
       - name: Run tests
         working-directory: python
-        run: pytest tests/test_xarray_backend.py tests/test_zarr_codec.py tests/test_dataset_determinism.py tests/test_north_up_real_world.py -v
+        run: pytest tests/test_xarray_backend.py tests/test_zarr_codec.py tests/test_dataset_determinism.py tests/test_north_up_real_world.py tests/test_edr_echo_top.py -v
 
   sdist:
     runs-on: ubuntu-latest
