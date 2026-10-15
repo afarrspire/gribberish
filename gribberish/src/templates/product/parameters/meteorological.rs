@@ -1319,11 +1319,11 @@ mod tests {
         // GRIB2 table 4.2-0-16 (forecast radar imagery). 197 is NCEP's local-use entry for
         // echo top, the same quantity as WMO number 3.
         // Reference: https://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_doc/grib2_table4-2-0-16.shtml
-        for number in [3u8, 197] {
+        for (number, name) in [(3u8, "echotop"), (197, "echotopncep")] {
             let retop = parameter(0, 16, number).unwrap();
             assert_eq!(retop.abbrev, "RETOP", "parameter number {number}");
+            assert_eq!(retop.name, name, "parameter number {number}");
             assert_eq!(retop.unit, "m", "parameter number {number}");
-            assert_ne!(retop.name, "missing", "parameter number {number}");
         }
         assert_eq!(parameter(0, 16, 196).unwrap().abbrev, "REFC");
         assert_eq!(parameter(0, 16, 198).unwrap().abbrev, "MAXREF");

@@ -1,7 +1,8 @@
 """Eddy dissipation parameter (0/19/30) and NCEP local echo top (0/16/197).
 
 The fixture holds two 4 x 3 regular lat-lon messages written with eccodes: EDPARM at
-250 hPa and RETOP at cloud top. Expected values are eccodes' decode of the file.
+250 hPa and RETOP at cloud top. Expected values are eccodes' decode of the file. The
+eccodes snippet that generates it is at the top of gribberish/tests/edr_echo_top.rs.
 """
 
 from pathlib import Path

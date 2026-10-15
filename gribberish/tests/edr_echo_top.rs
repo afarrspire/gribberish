@@ -2,9 +2,43 @@ use gribberish::message::read_messages;
 use gribberish::message_metadata::scan_message_metadata;
 use gribberish::templates::product::tables::FixedSurfaceType;
 
-// Two 4 × 3 regular lat-lon messages written with eccodes 2.x, simple packing at 16 bits:
-// eddy dissipation parameter (0/19/30) at 250 hPa and NCEP local echo top (0/16/197) at
-// cloud top (fixed surface type 3). Expected values are eccodes' decode of the file.
+// Two 4 × 3 regular lat-lon messages, simple packing at 16 bits: eddy dissipation
+// parameter (0/19/30) at 250 hPa and NCEP local echo top (0/16/197) at cloud top (fixed
+// surface type 3). Expected values are eccodes' decode of the file. Generated with the
+// eccodes Python bindings 2.48.0:
+//
+//     import eccodes as ec
+//
+//     def msg(cat, num, level_type, level, values, decimal):
+//         h = ec.codes_grib_new_from_samples("GRIB2")
+//         for key, value in [
+//             ("centre", 7), ("dataDate", 20261015), ("dataTime", 1200),
+//             ("gridType", "regular_ll"), ("Ni", 4), ("Nj", 3),
+//             ("latitudeOfFirstGridPointInDegrees", 50.0),
+//             ("longitudeOfFirstGridPointInDegrees", 0.0),
+//             ("latitudeOfLastGridPointInDegrees", 48.0),
+//             ("longitudeOfLastGridPointInDegrees", 3.0),
+//             ("iDirectionIncrementInDegrees", 1.0), ("jDirectionIncrementInDegrees", 1.0),
+//             ("discipline", 0), ("parameterCategory", cat), ("parameterNumber", num),
+//             ("typeOfFirstFixedSurface", level_type),
+//         ]:
+//             ec.codes_set(h, key, value)
+//         if level is not None:
+//             ec.codes_set(h, "scaleFactorOfFirstFixedSurface", 0)
+//             ec.codes_set(h, "scaledValueOfFirstFixedSurface", level)
+//         ec.codes_set(h, "forecastTime", 1)
+//         ec.codes_set(h, "packingType", "grid_simple")
+//         ec.codes_set(h, "decimalScaleFactor", decimal)
+//         ec.codes_set(h, "bitsPerValue", 16)
+//         ec.codes_set_values(h, values)
+//         return h
+//
+//     edr = [i * 0.05 for i in range(12)]
+//     retop = [i * 1500.0 for i in range(12)]
+//     with open("eccodes-edr-echo-top-4x3.grib2", "wb") as f:
+//         for h in (msg(19, 30, 100, 25000, edr, 3), msg(16, 197, 3, None, retop, 0)):
+//             ec.codes_write(h, f)
+//             ec.codes_release(h)
 const FIXTURE: &[u8] = include_bytes!("../../test-data/eccodes-edr-echo-top-4x3.grib2");
 
 const EDPARM: [f64; 12] = [
