@@ -49,11 +49,11 @@ jobs:
     strategy:
       matrix:
         platform:
-          # Same as upstream python.yml: both targets on macos-14 (arm64),
-          # x86_64 cross-compiled. GitHub retired the macos-13 Intel image.
-          - runner: macos-14
+          # Same as python.yml: both targets on macos-15 (arm64), x86_64
+          # cross-compiled. GitHub retired the macos-13 and macos-14 images.
+          - runner: macos-15
             target: x86_64
-          - runner: macos-14
+          - runner: macos-15
             target: aarch64
     steps:
       - uses: actions/checkout@v4

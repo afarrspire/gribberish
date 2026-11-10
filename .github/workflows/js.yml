@@ -71,7 +71,10 @@ jobs:
           - host: windows-latest
             target: x86_64-pc-windows-msvc
             build: yarn build --target x86_64-pc-windows-msvc
-          - host: ubuntu-latest
+          # Pinned: on ubuntu-latest (26.04) cc-rs builds openjpeg-sys with the
+          # host gcc 15 (C23 default), which links __isoc23_strtol and breaks
+          # loading in node:*-slim (glibc 2.36).
+          - host: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
             build: yarn build --target x86_64-unknown-linux-gnu --use-napi-cross
           - host: macos-latest
