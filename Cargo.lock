@@ -444,7 +444,7 @@ checksum = "a8d1add55171497b4705a648c6b583acafb01d58050a51727785f0b2c8e0a2b2"
 
 [[package]]
 name = "gribberish"
-version = "1.8.4+spire.1"
+version = "1.8.4+spire.2"
 dependencies = [
  "bitflags 2.6.0",
  "bitvec",
@@ -488,7 +488,7 @@ dependencies = [
 
 [[package]]
 name = "gribberishpy"
-version = "1.8.4+spire.1"
+version = "1.8.4+spire.2"
 dependencies = [
  "gribberish",
  "numpy",

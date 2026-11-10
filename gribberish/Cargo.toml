@@ -1,6 +1,6 @@
 [package]
 name = "gribberish"
-version = "1.8.4+spire.1"
+version = "1.8.4+spire.2"
 authors = ["Matthew Iannucci <mpiannucci@gmail.com>"]
 description = "Parse grib 2 files with Rust"
 edition = "2021"
