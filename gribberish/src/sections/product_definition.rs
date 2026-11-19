@@ -9,7 +9,8 @@ use crate::{
         HorizontalAnalysisForecastTemplate, HorizontalEnsembleForecastTemplate,
         PercentileHorizontalTemplate, PercentileHorizontalTimeIntervalTemplate,
         ProbabilityHorizontalForecastTemplate, ProbabilityHorizontalTimeIntervalTemplate,
-        WavePeriodRangeEnsembleForecastTemplate, WavePeriodRangeHorizontalForecastTemplate,
+        SimulatedSatelliteTemplate, WavePeriodRangeEnsembleForecastTemplate,
+        WavePeriodRangeHorizontalForecastTemplate,
     },
     utils::{read_u16_from_bytes, read_u32_from_bytes},
 };
@@ -96,6 +97,10 @@ impl<'a> ProductDefinitionSection<'a> {
                     discipline,
                 ),
             )),
+            32 => Some(Box::new(SimulatedSatelliteTemplate::new(
+                self.data.to_vec(),
+                discipline,
+            ))),
             103 => Some(Box::new(WavePeriodRangeHorizontalForecastTemplate::new(
                 self.data.to_vec(),
                 discipline,
