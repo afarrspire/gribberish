@@ -51,6 +51,13 @@ Upstream release 1.8.4 (`5e039e1`) plus, each as its own merge:
       sub-centre or local tables version, keeps the NCEP meanings (0/1/192
       CRAIN, 0/4/192 DSWRF under centre 7).
       Fixture `test-data/eccodes-spire-omni-v29-4x3.grib2`.
+   Upstream order: item 4.1 and item 4.4 apply cleanly to upstream `main`;
+   item 4.2 conflicts in `meteorological.rs` (this branch carries the
+   `edr-echo-top-parameters` change) and needs a rebase or to follow the EDR PR;
+   item 4.3 goes after item 4.2, as its test reads CBTMP. Item 4.4 uses
+   `Option::is_none_or` (Rust 1.82 or later); say so in its PR.
+   Omni v2.9's sample files are named `omni_v2.8_*`: v2.9 code writes the
+   release name `omni_v2.8`.
 
 ## Releasing
 

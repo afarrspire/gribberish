@@ -3,7 +3,7 @@
 /// Spire Omni writes its GRIB2 files with originating centre 255 (missing: Spire has no
 /// WMO centre id), sub-centre 0, local tables version 1. The table is the `local_table`
 /// of the Omni catalogue (`projects/modelling/omni/config/catalog/catalog_v1.3.1.json`
-/// in apex). It is keyed on all three values, so other data under centre 255 keeps the
+/// in apex, on Tom's `v2.9.6-int` branch since commit 2749ad4a; not on apex `main`). It is keyed on all three values, so other data under centre 255 keeps the
 /// NCEP meanings unless it also has sub-centre 0 and local tables version 1.
 use super::local::{LocalParameter, LocalTable};
 
