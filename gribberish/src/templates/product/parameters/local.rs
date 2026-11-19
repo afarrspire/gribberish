@@ -5,7 +5,7 @@
 //! tables give them NCEP's meanings, for every centre. A [`LocalTable`] gives the local
 //! numbers of one centre (optionally one sub-centre and one local tables version) their
 //! own meanings; the tables in [`LOCAL_TABLES`] apply when a message is decoded.
-//! `LOCAL_TABLES` is empty, so by default every centre keeps NCEP's meanings.
+//! Spire build: `LOCAL_TABLES` holds the Spire Omni table (see `spire.rs`).
 use gribberish_types::Parameter;
 
 /// The originating centre, sub-centre and local tables version of a GRIB2 message
@@ -54,9 +54,9 @@ impl LocalTable {
     }
 }
 
-/// Local tables used when messages are decoded. Empty: every centre gets NCEP's
-/// meanings for local numbers.
-pub const LOCAL_TABLES: &[LocalTable] = &[];
+/// Local tables used when messages are decoded. Spire build: the Spire Omni table (see
+/// `spire.rs` and SPIRE.md); every other originator gets NCEP's meanings.
+pub const LOCAL_TABLES: &[LocalTable] = &[super::spire::SPIRE_OMNI_LOCAL_TABLE];
 
 /// True for a number in the local-use range of a WMO parameter table (WMO discipline
 /// and category, number 192 to 254).
@@ -99,7 +99,7 @@ pub fn parameter_with_local_tables(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::templates::product::parameters::{parameter, parameter_for_originator};
+    use crate::templates::product::parameters::parameter;
 
     fn key(p: Option<Parameter>) -> Option<(String, String, String)> {
         p.map(|p| (p.abbrev, p.name, p.unit))
@@ -147,17 +147,6 @@ mod tests {
                 }
             }
         }
-    }
-
-    #[test]
-    fn no_local_tables_by_default() {
-        assert!(LOCAL_TABLES.is_empty());
-        assert_eq!(
-            parameter_for_originator(&originator(255, 0, 1), 0, 1, 192)
-                .unwrap()
-                .abbrev,
-            "CRAIN"
-        );
     }
 
     #[test]

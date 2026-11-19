@@ -19,6 +19,7 @@ pub mod meteorological;
 pub mod mrms;
 pub mod oceanographic;
 pub mod space;
+pub mod spire;
 
 #[allow(dead_code)]
 pub trait ProductDiscipline {
