@@ -824,6 +824,16 @@ pub enum ForecastRadarImagery {
     #[description = "reflectivity"]
     #[abbrev = "REFD"]
     #[unit = "dB"]
+    #[name = "reflectivity"]
+    ReflectivityWmo = 4,
+    #[description = "composite reflectivity"]
+    #[abbrev = "REFC"]
+    #[unit = "dB"]
+    #[name = "compositereflectivity"]
+    CompositeReflectivityWmo = 5,
+    #[description = "reflectivity"]
+    #[abbrev = "REFD"]
+    #[unit = "dB"]
     Reflectivity = 195,
     #[description = "composite reflectivity"]
     #[abbrev = "REFC"]
@@ -985,6 +995,10 @@ pub enum PhysicalAtmosphericProperties {
     #[abbrev = "TURB"]
     #[unit = "see table 4.208"]
     Turbulence = 10,
+    #[description = "icing"]
+    #[abbrev = "ICIP"]
+    #[unit = "%"]
+    Icing = 20,
     #[description = "clear air turbulence"]
     #[abbrev = "CAT"]
     #[unit = "%"]
@@ -1335,5 +1349,29 @@ mod tests {
         }
         assert_eq!(parameter(0, 16, 196).unwrap().abbrev, "REFC");
         assert_eq!(parameter(0, 16, 198).unwrap().abbrev, "MAXREF");
+    }
+
+    #[test]
+    fn wmo_reflectivity_and_icing() {
+        // GRIB2 table 4.2-0-16 numbers 4 and 5 are the WMO entries for reflectivity and
+        // composite reflectivity (NCEP's local 195 and 196 are the same quantities);
+        // table 4.2-0-19 number 20 is icing (NCEP abbreviation ICIP).
+        // Reference: https://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_doc/grib2_table4-2-0-16.shtml
+        // and https://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_doc/grib2_table4-2-0-19.shtml
+        for (wmo, ncep, abbrev, name) in [
+            (4u8, 195u8, "REFD", "reflectivity"),
+            (5, 196, "REFC", "compositereflectivity"),
+        ] {
+            for number in [wmo, ncep] {
+                let param = parameter(0, 16, number).unwrap();
+                assert_eq!(param.abbrev, abbrev, "parameter number {number}");
+                assert_eq!(param.name, name, "parameter number {number}");
+                assert_eq!(param.unit, "dB", "parameter number {number}");
+            }
+        }
+        let icing = parameter(0, 19, 20).unwrap();
+        assert_eq!(icing.abbrev, "ICIP");
+        assert_eq!(icing.name, "icing");
+        assert_eq!(icing.unit, "%");
     }
 }
