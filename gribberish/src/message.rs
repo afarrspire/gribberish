@@ -2,6 +2,7 @@ use crate::error::GribberishError;
 use crate::grib1::Grib1Message;
 use crate::sections::{indicator::Discipline, section::Section, section::SectionIterator};
 use crate::templates::grid_definition::GridDefinitionTemplate;
+use crate::templates::product::parameters::{local::Originator, parameter_for_originator};
 use crate::templates::product::product_template::{ProductTemplate, WavePeriodRange};
 use crate::templates::product::tables::{
     DerivedForecastType, FixedSurfaceType, GeneratingProcess, ProbabilityType, TimeUnit,
@@ -437,11 +438,46 @@ impl<'a> Message<'a> {
         Ok(format!("({}, {}, {})", discipline, category, parameter))
     }
 
+    /// Originating centre from section 1 (GRIB2) or the product definition section
+    /// (GRIB1).
+    pub fn originating_center(&self) -> Result<u16, GribberishError> {
+        match self {
+            Message::Grib1 { message, .. } => Ok(message.center_id() as u16),
+            Message::Grib2 { .. } => self.originator().map(|o| o.centre).ok_or_else(|| {
+                GribberishError::MessageError(
+                    "Identification section not found when reading originating centre".into(),
+                )
+            }),
+        }
+    }
+
+    /// Originating centre, sub-centre and local tables version of a GRIB2 message.
+    fn originator(&self) -> Option<Originator> {
+        self.sections().find_map(|s| match s {
+            Section::Identification(identification) => Some(Originator {
+                centre: identification.originating_center(),
+                subcentre: identification.originating_subcenter(),
+                local_tables_version: identification.local_tables_version(),
+            }),
+            _ => None,
+        })
+    }
+
     pub fn parameter(&self) -> Result<Parameter, GribberishError> {
         let product_template = self.product_template()?;
+        // Local parameter numbers (192-254) can mean different things per centre.
+        let parameter = match self.originator() {
+            Some(originator) => parameter_for_originator(
+                &originator,
+                product_template.discipline(),
+                product_template.category_value(),
+                product_template.parameter_value(),
+            ),
+            None => product_template.parameter(),
+        };
 
         let parameter = unwrap_or_return!(
-            product_template.parameter(),
+            parameter,
             GribberishError::MessageError(format!(
                 "This Product and Parameter is currently not supported: ({}, {})",
                 product_template.category_value(),

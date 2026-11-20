@@ -166,9 +166,12 @@ impl InternalState {
                 5,
             ),
             9..=16 => (2, 4),
-            5..=8 => (1, 3),
-            4 => (1, 2),
-            2..=3 => (1, 1),
+            // Code option id length as in libaec's aec_decode_init: 3 bits for
+            // every sample width up to 8, except under the restricted set of code
+            // options (AEC_RESTRICTED), which is only legal up to 4 bits.
+            1..=8 if !flags.intersects(Flags::AEC_RESTRICTED) => (1, 3),
+            3..=4 => (1, 2),
+            1..=2 => (1, 1),
             _ => return Err("Invalid bits_per_sample".into()),
         };
         let out_blklen = block_size * bytes_per_sample as u32;
@@ -931,8 +934,10 @@ pub fn extract_ccsds_data(
 mod tests {
     use super::*;
 
-    fn uncompressed_block(samples: &[u32], bits_per_sample: usize) -> Vec<u8> {
-        let mut bits = vec![true; 5];
+    /// One block coded with the uncompressed option: the option id (all ones,
+    /// `id_len` bits) followed by the samples at their full width.
+    fn uncompressed_block(samples: &[u32], bits_per_sample: usize, id_len: usize) -> Vec<u8> {
+        let mut bits = vec![true; id_len];
         for sample in samples {
             for shift in (0..bits_per_sample).rev() {
                 bits.push((sample & (1 << shift)) != 0);
@@ -954,10 +959,49 @@ mod tests {
         let samples = [
             0x000001, 0x000102, 0x010203, 0x102030, 0x234567, 0x789abc, 0xabcdef, 0xffffff,
         ];
-        let compressed = uncompressed_block(&samples, 24);
+        let compressed = uncompressed_block(&samples, 24, 5);
 
         let decoded = extract_ccsds_data(compressed, 8, 0, samples.len() * 3, 1, 24).unwrap();
 
         assert_eq!(decoded, samples.map(|sample| sample as f32),);
+    }
+
+    #[test]
+    fn low_bit_widths_use_a_three_bit_option_id() {
+        // Without AEC_RESTRICTED, libaec codes the option id in 3 bits for every
+        // width up to 8. A 4-bit field read with a 2-bit id decoded wrong values.
+        for bits in 1..=8usize {
+            let top = (1u32 << bits) - 1;
+            let samples: Vec<u32> = (0..8u32).map(|i| (i * 5 + 3) & top).collect();
+            let compressed = uncompressed_block(&samples, bits, 3);
+
+            let decoded = extract_ccsds_data(compressed, 8, 0, samples.len(), 1, bits).unwrap();
+
+            let expected: Vec<f32> = samples.iter().map(|&s| s as f32).collect();
+            assert_eq!(decoded, expected, "{bits} bits per sample");
+        }
+    }
+
+    #[test]
+    fn restricted_code_options_use_short_option_ids() {
+        // AEC_RESTRICTED: 1-bit id up to 2 bits per sample, 2-bit id for 3 and 4.
+        for (bits, id_len) in [(1usize, 1usize), (2, 1), (3, 2), (4, 2)] {
+            let top = (1u32 << bits) - 1;
+            let samples: Vec<u32> = (0..8u32).map(|i| (i * 3 + 1) & top).collect();
+            let compressed = uncompressed_block(&samples, bits, id_len);
+            let restricted = Flags::AEC_RESTRICTED.bits();
+
+            let decoded =
+                extract_ccsds_data(compressed, 8, restricted, samples.len(), 1, bits).unwrap();
+
+            let expected: Vec<f32> = samples.iter().map(|&s| s as f32).collect();
+            assert_eq!(decoded, expected, "{bits} bits per sample");
+        }
+    }
+
+    #[test]
+    fn restricted_code_options_reject_wide_samples() {
+        let restricted = Flags::AEC_RESTRICTED.bits();
+        assert!(extract_ccsds_data(vec![0; 16], 8, restricted, 8, 1, 5).is_err());
     }
 }

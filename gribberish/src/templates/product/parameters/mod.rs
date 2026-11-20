@@ -4,6 +4,7 @@ use self::{
     ecmwf::{ecmwf_local_category, ecmwf_local_parameter},
     hydrology::{hydrology_category, hydrology_parameter},
     land_surface::{land_surface_category, land_surface_parameter},
+    local::{parameter_with_local_tables, Originator, LOCAL_TABLES},
     meteorological::{meteorological_category, meteorological_parameter},
     mrms::{multiradar_category, multiradar_parameter},
     oceanographic::{oceanographic_category, oceanographic_parameter},
@@ -13,10 +14,12 @@ use self::{
 pub mod ecmwf;
 pub mod hydrology;
 pub mod land_surface;
+pub mod local;
 pub mod meteorological;
 pub mod mrms;
 pub mod oceanographic;
 pub mod space;
+pub mod spire;
 
 #[allow(dead_code)]
 pub trait ProductDiscipline {
@@ -49,4 +52,17 @@ pub fn parameter(discipline: u8, category: u8, parameter: u8) -> Option<Paramete
         209 => multiradar_parameter(category, parameter),
         _ => None,
     }
+}
+
+/// Parameter lookup that takes the originator of the message into account: a local
+/// number (192 to 254) gets its meaning from the [`LOCAL_TABLES`] entry for the
+/// originating centre when there is one, else from the built-in (NCEP) tables. See
+/// [`local`].
+pub fn parameter_for_originator(
+    originator: &Originator,
+    discipline: u8,
+    category: u8,
+    number: u8,
+) -> Option<Parameter> {
+    parameter_with_local_tables(LOCAL_TABLES, originator, discipline, category, number)
 }

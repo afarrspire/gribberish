@@ -71,6 +71,21 @@ impl<'a> IdentificationSection<'a> {
         IdentificationSection { data }
     }
 
+    /// Originating centre (octets 6-7, common code table C-11; 255 = missing).
+    pub fn originating_center(&self) -> u16 {
+        read_u16_from_bytes(self.data, 5).unwrap_or(u16::MAX)
+    }
+
+    /// Originating sub-centre (octets 8-9, common code table C-12).
+    pub fn originating_subcenter(&self) -> u16 {
+        read_u16_from_bytes(self.data, 7).unwrap_or(u16::MAX)
+    }
+
+    /// Version number of the local tables (octet 11; 0 = local tables not used).
+    pub fn local_tables_version(&self) -> u8 {
+        self.data[10]
+    }
+
     pub fn reference_date_significance(&self) -> ReferenceDataSignificance {
         self.data[11].into()
     }
