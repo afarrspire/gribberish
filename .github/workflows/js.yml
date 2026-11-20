@@ -80,9 +80,14 @@ jobs:
           - host: macos-latest
             target: aarch64-apple-darwin
             build: yarn build --target aarch64-apple-darwin
+          # Pinned: rustc 1.100.0 (2026-11-09) links crt1-reactor.o twice for
+          # wasm32-wasip1-threads (rust-lld: duplicate symbol: _initialize).
+          # Back to stable once a release builds it. Holds only while WASI_SDK_PATH
+          # is unset: wasi-sdk 34 needs rustc 1.100 or later (napi-rs #3491).
           - host: ubuntu-latest
             target: wasm32-wasip1-threads
             build: yarn build --target wasm32-wasip1-threads
+            toolchain: 1.99.0
     name: stable - ${{ matrix.settings.target }} - node@24
     runs-on: ${{ matrix.settings.host }}
     defaults:
@@ -99,7 +104,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          toolchain: ${{ matrix.settings.toolchain || 'stable' }}
           targets: ${{ matrix.settings.target }}
       - name: Cache cargo
         uses: actions/cache@v4
