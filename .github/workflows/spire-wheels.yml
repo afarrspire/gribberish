@@ -56,7 +56,7 @@ jobs:
     needs: [cargo-test]
     # One universal2 wheel (x86_64 and arm64 in one file) on one Intel runner,
     # the arm64 half cross-compiled. The macos-15 (arm64) pool often had no
-    # runner for a release job (v1.8.4+spire.3: the x86_64 job cancelled twice,
+    # runner for a release job (v1.8.4+spire.3: the x86_64 job cancelled three times,
     # "not acquired by Runner of type hosted"), and the release needs every job.
     runs-on: macos-15-intel
     steps:
