@@ -69,8 +69,13 @@ git tag v1.8.4+spire.N && git push fork v1.8.4+spire.N
 ```
 
 `spire-wheels.yml` runs `cargo test`, builds CPython 3.12 wheels for
-manylinux x86_64 and aarch64 and macOS x86_64/arm64 plus an sdist, and attaches them to a
+manylinux x86_64 and aarch64, one macOS universal2 wheel (x86_64 and arm64,
+built on a `macos-15-intel` runner) plus an sdist, and attaches them to a
 GitHub Release for the tag. Nothing goes to PyPI.
+
+The tag `v1.8.4+spire.3` has no release: its macOS x86_64 job got no
+macOS arm64 runner three times, and the release step needs every job.
+`v1.8.4+spire.4` carries the same code with the universal2 build.
 
 ## Rule
 

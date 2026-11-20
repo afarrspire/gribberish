@@ -54,32 +54,27 @@ jobs:
 
   macos:
     needs: [cargo-test]
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      matrix:
-        platform:
-          # Same as python.yml: both targets on macos-15 (arm64), x86_64
-          # cross-compiled. GitHub retired the macos-13 and macos-14 images.
-          - runner: macos-15
-            target: x86_64
-          - runner: macos-15
-            target: aarch64
+    # One universal2 wheel (x86_64 and arm64 in one file) on one Intel runner,
+    # the arm64 half cross-compiled. The macos-15 (arm64) pool often had no
+    # runner for a release job (v1.8.4+spire.3: the x86_64 job cancelled three times,
+    # "not acquired by Runner of type hosted"), and the release needs every job.
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build wheels
+      - name: Build wheel
         uses: PyO3/maturin-action@v1
         with:
           working-directory: python
-          target: ${{ matrix.platform.target }}
+          target: universal2-apple-darwin
           args: --release --out dist -i 3.12
           sccache: 'true'
-      - name: Upload wheels
+      - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-macos-${{ matrix.platform.target }}
+          name: wheels-macos-universal2
           path: python/dist
 
   sdist:
